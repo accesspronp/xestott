@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order - Zest OTT</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/png" href="zest-logo.png">
+  <link rel="apple-touch-icon" href="zest-logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand brand-link" href="index.html">
+    <img src="zest-logo.png" alt="Zest OTT Logo">
+    <div>
+      <h2>Zest OTT</h2>
+      <p>Order Tracker</p>
+    </div>
+  </a>
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="login.html">Login</a>
+    <a href="https://wa.me/9779744413521" target="_blank">Contact</a>
+  </nav>
+</header>
+
+<section class="tracker-page">
+  <div class="tracker-card">
+    <span class="mini-badge">Order Tracking</span>
+    <h1>Track Your Order</h1>
+    <p>Enter your order ID or use your latest saved order from this browser.</p>
+
+    <div class="tracker-form">
+      <input id="orderInput" placeholder="Example: ZEST-123456">
+      <button onclick="trackOrder()">Track</button>
+    </div>
+
+    <div id="trackingResult" class="tracking-result"></div>
+
+    <a class="checkout-btn" href="https://wa.me/9779744413521" target="_blank">Ask on WhatsApp</a>
+  </div>
+</section>
+
+<script>
+function trackOrder() {
+  const typed = document.getElementById("orderInput").value.trim();
+  const savedId = localStorage.getItem("lastOrderId") || "ZEST-DEMO";
+  const orderId = typed || savedId;
+
+  const product = localStorage.getItem("lastOrderProduct") || "Your Product";
+  const duration = localStorage.getItem("lastOrderDuration") || "Selected Plan";
+  const amount = localStorage.getItem("lastOrderAmount") || "NPR";
+  const status = localStorage.getItem("lastOrderStatus") || "Payment Verification Pending";
+
+  document.getElementById("trackingResult").innerHTML = `
+    <div class="status-box">
+      <h2>${orderId}</h2>
+      <p><b>Product:</b> ${product}</p>
+      <p><b>Plan:</b> ${duration}</p>
+      <p><b>Amount:</b> ${amount}</p>
+      <p><b>Status:</b> ${status}</p>
+      <div class="status-steps">
+        <span class="done">Order Created</span>
+        <span class="active">Payment Verification</span>
+        <span>Activation</span>
+        <span>Delivered</span>
+      </div>
+    </div>
+  `;
+}
+
+window.addEventListener("DOMContentLoaded", trackOrder);
+</script>
+
+</body>
+</html>
