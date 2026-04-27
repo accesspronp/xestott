@@ -1,81 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout - Zest OTT</title>
+  <link rel="icon" type="image/png" href="zest-logo.png">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="cartoon-body">
+
+<header class="topbar">
+  <a class="brand brand-link" href="index.html">
+    <img src="zest-logo.png" alt="Zest OTT Logo">
+    <div>
+      <h2>Zest OTT</h2>
+      <p>Secure Checkout</p>
+    </div>
+  </a>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="cart.html">Cart</a>
+    <a href="orders.html">My Orders</a>
+    <a href="admin.html">Admin</a>
+    <a href="login.html">Login</a>
+  </nav>
+</header>
+
+<section class="purchase-layout">
+  <div class="purchase-main">
+    <div class="purchase-card cartoon-card">
+      <span class="mini-badge">Secure Order</span>
+      <h1>Complete Your Purchase</h1>
+      <p class="purchase-desc">
+        Pay using the QR, upload/select your payment screenshot, add a note, then click <strong>Payment Done - Verify Order</strong>.
+        Your order will be saved on the website and usually completed within <strong>10-20 minutes</strong> after verification.
+      </p>
+
+      <div class="order-summary">
+        <div>
+          <p>Product</p>
+          <h2 id="productName">Product</h2>
+        </div>
+        <div>
+          <p>Duration</p>
+          <h2 id="durationName">Duration</h2>
+        </div>
+        <div>
+          <p>Amount</p>
+          <h2 id="priceName">Price</h2>
+        </div>
+      </div>
+
+      <div id="cartList" class="special-box" style="display:none;"></div>
+      <div id="specialFields" class="special-fields"></div>
+
+      <label class="field-label" for="noteBox">Order Note</label>
+      <textarea id="noteBox" placeholder="Example: I paid by eSewa. Please activate on this email."></textarea>
+
+      <label class="field-label" for="receiptFile">Payment Receipt Screenshot</label>
+      <input id="receiptFile" type="file" accept="image/*,.pdf" />
+
+      <div class="receipt-note">
+        ✅ After submitting, your order status will show as <strong>Pending</strong>. Delivery/activation usually takes <strong>10-20 minutes</strong> after payment verification.
+      </div>
+
+      <button onclick="placeOrder()" class="checkout-btn">Payment Done - Verify Order</button>
+      <a href="cart.html" class="back-btn">Back to Cart</a>
+    </div>
+  </div>
+
+  <aside class="payment-side compact-payment">
+    <h2>Choose Payment Method</h2>
+    <p class="side-desc">Pay with the selected QR. Then upload/select receipt and submit order.</p>
+
+    <div class="payment-choice-row">
+      <button class="method-btn esewa-method active-method" onclick="selectPayment('esewa')">eSewa</button>
+      <button class="method-btn fonepay-method" onclick="selectPayment('fonepay')">Fonepay</button>
+    </div>
+
+    <div id="esewaPanel" class="pay-panel active-pay-panel">
+      <div class="pay-card cartoon-card esewa-card compact-card">
+        <img src="esewa-payment.png" alt="eSewa QR Payment">
+        <div class="pay-text">
+          <h3>eSewa Payment</h3>
+          <p>eSewa Number: <strong>9812766213</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="fonepayPanel" class="pay-panel">
+      <div class="pay-card cartoon-card fonepay-card compact-card">
+        <div class="fonepay-pending">
+          <div class="fonepay-logo">Fonepay</div>
+          <div class="qr-pending-box">QR Pending</div>
+          <p>Fonepay QR will be added soon.</p>
+        </div>
+        <div class="pay-text">
+          <h3>Fonepay Payment</h3>
+          <p>Use eSewa for now if Fonepay QR is not ready.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="delivery-box compact-delivery">
+      <h3>Delivery Time</h3>
+      <p>Activation usually takes <strong>10-20 minutes</strong> after verification.</p>
+    </div>
+  </aside>
+</section>
+
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const params = new URLSearchParams(window.location.search);
-const product = params.get("product") || "Selected Product";
-const duration = params.get("duration") || "Selected Duration";
-const price = params.get("price") || "Add Later";
-const type = params.get("type") || "normal";
+const isCartCheckout = params.get("cart") === "1";
+const cart = JSON.parse(localStorage.getItem("zestCart") || "[]");
 
-document.getElementById("productName").innerText = product;
-document.getElementById("durationName").innerText = duration;
-document.getElementById("priceName").innerText =
-  price === "Add Later" ? "Add Later" : "Rs. " + price;
+let product = params.get("product") || "Selected Product";
+let duration = params.get("duration") || "Selected Duration";
+let price = params.get("price") || "0";
+let type = params.get("type") || "normal";
+let selectedPayment = "eSewa";
+let currentUser = null;
 
 const orderId = "ZEST-" + Date.now();
-
-let currentUser = null;
-let selectedPayment = "eSewa";
+const productName = document.getElementById("productName");
+const durationName = document.getElementById("durationName");
+const priceName = document.getElementById("priceName");
+const cartList = document.getElementById("cartList");
+const specialFields = document.getElementById("specialFields");
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
 });
 
-const specialFields = document.getElementById("specialFields");
+function cartTotal() {
+  return cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+}
 
-if (type === "login") {
-  specialFields.innerHTML = `
-    <div class="special-box">
-      <h3>Account Setup Details</h3>
-      <p>Please enter email and password carefully.</p>
+function setupPage() {
+  if (isCartCheckout) {
+    if (!cart.length) {
+      alert("Your cart is empty.");
+      window.location.href = "cart.html";
+      return;
+    }
 
-      <label class="field-label">Email</label>
-      <input id="emailField" type="email" placeholder="Enter account email">
+    product = cart.map(item => item.product).join(", ");
+    duration = cart.length + " item(s)";
+    price = String(cartTotal());
+    type = cart.some(item => item.type === "login") ? "login" : (cart.some(item => item.type === "email") ? "email" : "normal");
 
-      <label class="field-label">Password</label>
-      <input id="passwordField" type="text" placeholder="Enter password">
+    cartList.style.display = "block";
+    cartList.innerHTML = "<h3>Cart Items</h3>" + cart.map(item => `
+      <p><strong>${item.product}</strong><br>${item.duration}<br>Rs. ${item.price}</p>
+    `).join("");
+  }
 
-      <label class="check-line">
-        <input id="confirmLogin" type="checkbox">
-        I confirm email and password are correct.
-      </label>
-    </div>
-  `;
-} else if (type === "email") {
-  specialFields.innerHTML = `
-    <div class="special-box">
-      <h3>Own Email Setup</h3>
-      <p>Enter the email where you want activation.</p>
+  productName.innerText = product;
+  durationName.innerText = duration;
+  priceName.innerText = "Rs. " + price;
 
-      <label class="field-label">Email</label>
-      <input id="emailField" type="email" placeholder="Enter your email">
+  renderFields();
+}
 
-      <label class="check-line">
-        <input id="confirmLogin" type="checkbox">
-        I confirm this email is correct.
-      </label>
-    </div>
-  `;
-} else {
-  specialFields.innerHTML = `
-    <div class="special-box">
-      <h3>Order Info</h3>
-      <p>After payment, click Place Order. Your order will be saved on the website.</p>
-
-      <label class="field-label">Email / Contact</label>
-      <input id="emailField" type="email" placeholder="Enter email or contact email">
-    </div>
-  `;
+function renderFields() {
+  if (type === "login") {
+    specialFields.innerHTML = `
+      <div class="special-box">
+        <h3>Account Setup Details</h3>
+        <p>Some selected products require email and password.</p>
+        <label class="field-label">Email</label>
+        <input id="emailField" type="email" placeholder="Enter account email">
+        <label class="field-label">Password</label>
+        <input id="passwordField" type="text" placeholder="Enter password">
+        <label class="check-line"><input id="confirmLogin" type="checkbox"> I confirm details are correct.</label>
+      </div>
+    `;
+  } else if (type === "email") {
+    specialFields.innerHTML = `
+      <div class="special-box">
+        <h3>Own Email Setup</h3>
+        <p>Enter the email where you want activation.</p>
+        <label class="field-label">Email</label>
+        <input id="emailField" type="email" placeholder="Enter your email">
+        <label class="check-line"><input id="confirmLogin" type="checkbox"> I confirm this email is correct.</label>
+      </div>
+    `;
+  } else {
+    specialFields.innerHTML = `
+      <div class="special-box">
+        <h3>Order Contact</h3>
+        <p>Enter your email/contact for delivery updates.</p>
+        <label class="field-label">Email / Contact</label>
+        <input id="emailField" type="email" placeholder="Enter email or contact email">
+      </div>
+    `;
+  }
 }
 
 window.selectPayment = function(method) {
   selectedPayment = method === "esewa" ? "eSewa" : "Fonepay";
-
   document.getElementById("fonepayPanel").classList.toggle("active-pay-panel", method === "fonepay");
   document.getElementById("esewaPanel").classList.toggle("active-pay-panel", method === "esewa");
-
   document.querySelector(".fonepay-method").classList.toggle("active-method", method === "fonepay");
   document.querySelector(".esewa-method").classList.toggle("active-method", method === "esewa");
 };
@@ -96,11 +226,9 @@ window.placeOrder = async function() {
   const accountPassword = valueOf("passwordField");
   const note = valueOf("noteBox");
   const receiptInput = document.getElementById("receiptFile");
-  const receiptName = receiptInput && receiptInput.files.length
-    ? receiptInput.files[0].name
-    : "Not uploaded";
-
+  const receiptName = receiptInput && receiptInput.files.length ? receiptInput.files[0].name : "Not uploaded";
   const confirmBox = document.getElementById("confirmLogin");
+
   if (confirmBox && !confirmBox.checked) {
     alert("Please confirm your details are correct.");
     return;
@@ -108,6 +236,11 @@ window.placeOrder = async function() {
 
   if (!accountEmail) {
     alert("Please enter email/contact details.");
+    return;
+  }
+
+  if (receiptName === "Not uploaded") {
+    alert("Please upload/select your payment receipt screenshot first.");
     return;
   }
 
@@ -119,7 +252,8 @@ window.placeOrder = async function() {
       product,
       duration,
       price,
-      amountText: price === "Add Later" ? "Please confirm price" : "Rs. " + price,
+      amountText: "Rs. " + price,
+      items: isCartCheckout ? cart : [{ product, duration, price, type }],
       setupType: type,
       accountEmail,
       accountPassword: accountPassword || "",
@@ -128,14 +262,24 @@ window.placeOrder = async function() {
       paymentMethod: selectedPayment,
       paymentStatus: "pending",
       orderStatus: "pending",
+      deliveryMessage: "Order will be done within 10-20 minutes after payment verification.",
       createdAt: serverTimestamp()
     });
 
-    alert("Order placed successfully!");
+    if (isCartCheckout) {
+      localStorage.removeItem("zestCart");
+    }
+
+    alert("Order submitted! It will be done within 10-20 minutes after verification.");
     window.location.href = "orders.html";
   } catch (error) {
     console.error(error);
     alert("Order failed: " + error.message);
   }
 };
+
+setupPage();
 </script>
+
+</body>
+</html>
