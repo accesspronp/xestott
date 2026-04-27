@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Your Orders</h1>
+<div id="orders"></div>
+
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+onAuthStateChanged(auth, async (user) => {
+  if(!user){
+    location.href="login.html";
+    return;
+  }
+
+  const q = query(collection(db,"orders"), where("userEmail","==",user.email));
+  const snap = await getDocs(q);
+
+  let html = "";
+
+  snap.forEach(doc=>{
+    const d = doc.data();
+
+    html += `
+    <div style="border:1px solid #ccc;padding:10px;margin:10px;">
+      <h3>${d.product}</h3>
+      <p>Status: ${d.orderStatus}</p>
+      <p>Payment: ${d.paymentStatus}</p>
+    </div>
+    `;
+  });
+
+  document.getElementById("orders").innerHTML = html;
+});
+</script>
+
+</body>
+</html>
