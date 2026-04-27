@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purchase - Zest OTT</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/png" href="zest-logo.png">
+  <link rel="apple-touch-icon" href="zest-logo.png">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="cartoon-body">
+
+<header class="topbar">
+  <a class="brand brand-link" href="index.html">
+    <img src="zest-logo.png" alt="Zest OTT Logo">
+    <div>
+      <h2>Zest OTT</h2>
+      <p>Digital Authorized Store</p>
+    </div>
+  </a>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="index.html#products">Products</a>
+    <a href="index.html#refund">Refund Policy</a>
+    <a href="login.html">Login</a>
+    <a href="https://wa.me/9779744413521" target="_blank">WhatsApp Support</a>
+    <a href="https://shareurl.hamrobazaar.com/4ogsoeqXten8v7hQ6" target="_blank">HamroBazaar</a>
+  </nav>
+</header>
+
+<section class="purchase-layout">
+
+  <div class="purchase-main">
+    <div class="purchase-card cartoon-card">
+      <span class="mini-badge">Secure Order</span>
+      <h1>Complete Your Purchase</h1>
+      <p class="purchase-desc">
+        Review your order, pay using eSewa or Fonepay, upload/download your receipt for safety,
+        then press verify to send your order details on WhatsApp.
+      </p>
+
+      <div class="order-summary">
+        <div>
+          <p>Product</p>
+          <h2 id="productName">Product</h2>
+        </div>
+        <div>
+          <p>Duration</p>
+          <h2 id="durationName">Duration</h2>
+        </div>
+        <div>
+          <p>Amount</p>
+          <h2 id="priceName">Price</h2>
+        </div>
+      </div>
+
+      <div id="specialFields" class="special-fields"></div>
+
+      <label class="field-label" for="noteBox">Order Note / Description</label>
+      <textarea id="noteBox" placeholder="Write your note here. Example: I paid via Fonepay. Please activate on this email."></textarea>
+
+      <label class="field-label" for="receiptFile">Upload Payment Receipt Screenshot</label>
+      <input id="receiptFile" type="file" accept="image/*,.pdf" />
+
+      <div class="receipt-note">
+        ⚠️ After clicking verify, WhatsApp will open with your order details. Please manually attach/send your receipt screenshot in WhatsApp.
+      </div>
+
+      <button onclick="verifyOrder()" class="checkout-btn">Verify Payment on WhatsApp</button>
+      <a href="index.html" class="back-btn">Back to Store</a>
+    </div>
+  </div>
+
+  <aside class="payment-side compact-payment">
+    <h2>Choose Payment Method</h2>
+    <p class="side-desc">Tap one option below. Only the selected QR will open.</p>
+
+    <div class="payment-choice-row">
+      <button class="method-btn esewa-method active-method" onclick="selectPayment('esewa')">eSewa</button>
+      <button class="method-btn fonepay-method" onclick="selectPayment('fonepay')">Fonepay</button>
+    </div>
+
+    <div id="esewaPanel" class="pay-panel active-pay-panel">
+      <div class="pay-card cartoon-card esewa-card compact-card">
+        <img src="esewa-payment.png" alt="eSewa QR Payment">
+        <div class="pay-text">
+          <h3>eSewa Payment</h3>
+          <p>eSewa Number: <strong>9812766213</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="fonepayPanel" class="pay-panel">
+      <div class="pay-card cartoon-card fonepay-card compact-card">
+        <div class="fonepay-pending"><div class="fonepay-logo">Fonepay</div><div class="qr-pending-box">QR Pending</div><p>Fonepay QR will be added soon.</p></div>
+        <div class="pay-text">
+          <h3>Fonepay Payment</h3>
+          <p>Fonepay QR is pending and will be updated soon. Use eSewa for now or contact WhatsApp support.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="delivery-box compact-delivery">
+      <h3>Delivery Time</h3>
+      <p>Activation usually takes <strong>10-20 minutes</strong> after payment verification.</p>
+    </div>
+  </aside>
+
+</section>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const product = params.get("product") || "Selected Product";
+const duration = params.get("duration") || "Selected Duration";
+const price = params.get("price") || "Add Later";
+const type = params.get("type") || "normal";
+
+document.getElementById("productName").innerText = product;
+document.getElementById("durationName").innerText = duration;
+document.getElementById("priceName").innerText = price === "Add Later" ? "Add Later" : "Rs. " + price;
+const orderId = "ZEST-" + (Math.floor(Math.random() * 51) + 300);
+localStorage.setItem("lastOrderId", orderId);
+localStorage.setItem("lastOrderProduct", product);
+localStorage.setItem("lastOrderDuration", duration);
+localStorage.setItem("lastOrderAmount", price === "Add Later" ? "Please confirm price" : "Rs. " + price);
+localStorage.setItem("lastOrderStatus", "Payment Verification Pending");
+
+const specialFields = document.getElementById("specialFields");
+
+if (type === "login") {
+  specialFields.innerHTML = `
+    <div class="special-box">
+      <h3>Account Setup Details</h3>
+      <p>Please enter email and password carefully. Recheck both before verifying.</p>
+
+      <label class="field-label">Email</label>
+      <input id="emailField" type="email" placeholder="Enter account email">
+
+      <label class="field-label">Password</label>
+      <input id="passwordField" type="text" placeholder="Enter password">
+
+      <label class="check-line">
+        <input id="confirmLogin" type="checkbox">
+        I confirm email and password are correct.
+      </label>
+    </div>
+  `;
+} else if (type === "email") {
+  specialFields.innerHTML = `
+    <div class="special-box">
+      <h3>Own Email Setup</h3>
+      <p>Enter the email where you want activation.</p>
+
+      <label class="field-label">Email</label>
+      <input id="emailField" type="email" placeholder="Enter your email">
+
+      <label class="check-line">
+        <input id="confirmLogin" type="checkbox">
+        I confirm this email is correct.
+      </label>
+    </div>
+  `;
+} else {
+  specialFields.innerHTML = `
+    <div class="special-box">
+      <h3>Order Info</h3>
+      <p>After payment, click verify and send your receipt screenshot on WhatsApp.</p>
+    </div>
+  `;
+}
+
+let selectedPayment = "eSewa";
+
+function selectPayment(method) {
+  selectedPayment = method === "esewa" ? "eSewa" : "Fonepay (QR Pending)";
+
+  document.getElementById("fonepayPanel").classList.toggle("active-pay-panel", method === "fonepay");
+  document.getElementById("esewaPanel").classList.toggle("active-pay-panel", method === "esewa");
+
+  document.querySelector(".fonepay-method").classList.toggle("active-method", method === "fonepay");
+  document.querySelector(".esewa-method").classList.toggle("active-method", method === "esewa");
+}
+
+function valueOf(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
+function verifyOrder() {
+  const note = valueOf("noteBox");
+  const email = valueOf("emailField");
+  const password = valueOf("passwordField");
+  const receiptInput = document.getElementById("receiptFile");
+  const receiptName = receiptInput.files.length ? receiptInput.files[0].name : "Not uploaded on website";
+
+  let extra = "";
+  if (email) extra += `\nEmail: ${email}`;
+  if (password) extra += `\nPassword: ${password}`;
+
+  const confirmBox = document.getElementById("confirmLogin");
+  if (confirmBox && !confirmBox.checked) {
+    alert("Please confirm your email/password details are correct before verifying.");
+    return;
+  }
+
+  const amountText = price === "Add Later" ? "Please confirm price" : "Rs. " + price;
+
+  const message =
+`Hello Zest OTT, I want to verify my order.
+
+Order ID: ${orderId}
+Product: ${product}
+Duration: ${duration}
+Amount: ${amountText}
+Currency: NPR
+Payment Method: ${selectedPayment}${extra}
+
+Note: ${note || "No extra note"}
+Receipt file selected: ${receiptName}
+
+I will send/upload my payment receipt screenshot here.
+Please activate my order.`;
+
+  window.open("https://wa.me/9779744413521?text=" + encodeURIComponent(message), "_blank");
+}
+</script>
+
+
+<div class="floating-actions" aria-label="Quick support links">
+  <a class="float-btn whatsapp-float" href="https://wa.me/9779744413521" target="_blank" rel="noopener">💬 WhatsApp Support</a>
+  <a class="float-btn hamro-float" href="https://shareurl.hamrobazaar.com/4ogsoeqXten8v7hQ6" target="_blank" rel="noopener">🛒 HamroBazaar</a>
+</div>
+</body>
+</html>
