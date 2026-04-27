@@ -1,39 +1,121 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - Zest OTT</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="cartoon-body">
 
-<h1>Your Orders</h1>
-<div id="orders"></div>
+<header class="topbar">
+  <a class="brand brand-link" href="index.html">
+    <img src="zest-logo.png" alt="Zest OTT Logo">
+    <div>
+      <h2>Zest OTT</h2>
+      <p>My Orders</p>
+    </div>
+  </a>
+
+  <nav class="top-nav">
+    <a href="index.html">Home</a>
+    <a href="index.html#products">Products</a>
+    <a href="login.html">Login</a>
+  </nav>
+</header>
+
+<section class="auth-page">
+  <div class="auth-card">
+    <span class="mini-badge">Order Tracking</span>
+    <h1>Your Orders</h1>
+    <p>Track your payment and activation status here.</p>
+
+    <div id="orders" style="margin-top:20px;">Loading orders...</div>
+  </div>
+</section>
 
 <script type="module">
 import { auth, db } from "./firebase.js";
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const ordersBox = document.getElementById("orders");
 
 onAuthStateChanged(auth, async (user) => {
-  if(!user){
-    location.href="login.html";
+  if (!user) {
+    alert("Please login first.");
+    window.location.href = "login.html";
     return;
   }
 
-  const q = query(collection(db,"orders"), where("userEmail","==",user.email));
-  const snap = await getDocs(q);
+  try {
+    const q = query(
+      collection(db, "orders"),
+      where("userEmail", "==", user.email)
+    );
 
-  let html = "";
+    const snap = await getDocs(q);
 
-  snap.forEach(doc=>{
-    const d = doc.data();
+    if (snap.empty) {
+      ordersBox.innerHTML = `
+        <div class="status-box">
+          <h2>No orders yet</h2>
+          <p>You have not placed any orders yet.</p>
+          <a class="back-btn" href="index.html">Go Shopping</a>
+        </div>
+      `;
+      return;
+    }
 
-    html += `
-    <div style="border:1px solid #ccc;padding:10px;margin:10px;">
-      <h3>${d.product}</h3>
-      <p>Status: ${d.orderStatus}</p>
-      <p>Payment: ${d.paymentStatus}</p>
-    </div>
+    let html = "";
+
+    snap.forEach((docSnap) => {
+      const d = docSnap.data();
+
+      const orderStatus = d.orderStatus || "pending";
+      const paymentStatus = d.paymentStatus || "pending";
+
+      html += `
+        <div class="status-box" style="margin-bottom:16px;">
+          <h2>${d.product || "Product"}</h2>
+
+          <p><strong>Order ID:</strong> ${d.orderId || docSnap.id}</p>
+          <p><strong>Duration:</strong> ${d.duration || "-"}</p>
+          <p><strong>Amount:</strong> ${d.amountText || ("Rs. " + (d.price || "0"))}</p>
+
+          <div class="status-steps">
+            <span class="${orderStatus === "pending" ? "active" : "done"}">Pending</span>
+            <span class="${orderStatus === "processing" ? "active" : (["activated","completed"].includes(orderStatus) ? "done" : "")}">Processing</span>
+            <span class="${orderStatus === "activated" ? "active" : (orderStatus === "completed" ? "done" : "")}">Activated</span>
+            <span class="${orderStatus === "completed" ? "done" : ""}">Completed</span>
+          </div>
+
+          <p style="margin-top:12px;"><strong>Order Status:</strong> ${orderStatus}</p>
+          <p><strong>Payment Status:</strong> ${paymentStatus}</p>
+          <p><strong>Payment Method:</strong> ${d.paymentMethod || "-"}</p>
+        </div>
+      `;
+    });
+
+    ordersBox.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    ordersBox.innerHTML = `
+      <div class="status-box">
+        <h2>Error loading orders</h2>
+        <p>${error.message}</p>
+      </div>
     `;
-  });
-
-  document.getElementById("orders").innerHTML = html;
+  }
 });
 </script>
 
