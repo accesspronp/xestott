@@ -1,4 +1,4 @@
-// Zest OTT cart system - converts BUY NOW buttons into Add to Cart buttons without changing product cards.
+// Zest OTT cart system - keeps BUY NOW and adds a separate ADD TO CART button.
 (function () {
   function getCart() {
     return JSON.parse(localStorage.getItem('zestCart') || '[]');
@@ -25,45 +25,43 @@
     cartLink.setAttribute('data-cart-link', 'true');
     cartLink.innerHTML = 'Cart 🛒 (<span data-cart-count>0</span>)';
     nav.insertBefore(cartLink, nav.firstChild);
-
-    const ordersLink = document.createElement('a');
-    ordersLink.href = 'orders.html';
-    ordersLink.textContent = 'My Orders';
-    nav.insertBefore(ordersLink, cartLink.nextSibling);
-
-    const adminLink = document.createElement('a');
-    adminLink.href = 'admin.html';
-    adminLink.textContent = 'Admin';
-    nav.appendChild(adminLink);
   }
 
-  function convertButtons() {
-    document.querySelectorAll('.cartoon-card button').forEach(button => {
-      if (button.dataset.cartReady === 'true') return;
-
-      const card = button.closest('.cartoon-card');
-      if (!card) return;
+  function addCartButtons() {
+    document.querySelectorAll('.cartoon-card').forEach(card => {
+      if (card.dataset.cartButtonAdded === 'true') return;
 
       const titleEl = card.querySelector('h3');
       const select = card.querySelector('select');
-      if (!titleEl || !select) return;
+      const buyButton = card.querySelector('button');
+      if (!titleEl || !select || !buyButton) return;
 
-      button.dataset.cartReady = 'true';
-      button.textContent = 'ADD TO CART 🛒';
-      button.onclick = function () {
+      const originalOnclick = buyButton.getAttribute('onclick') || '';
+      const cartButton = document.createElement('button');
+      cartButton.type = 'button';
+      cartButton.textContent = 'ADD TO CART 🛒';
+      cartButton.style.marginTop = '10px';
+      cartButton.style.background = '#111';
+      cartButton.style.color = '#fff';
+      cartButton.style.boxShadow = '0 7px 0 #444';
+
+      cartButton.addEventListener('click', function () {
         const selected = select.options[select.selectedIndex];
         const item = {
           product: titleEl.textContent.trim(),
           duration: selected.textContent.trim(),
           price: selected.getAttribute('data-price') || '0',
-          type: getTypeFromOldOnclick(button.getAttribute('onclick') || '')
+          type: getTypeFromOldOnclick(originalOnclick)
         };
 
         const cart = getCart();
         cart.push(item);
         saveCart(cart);
         alert(item.product + ' added to cart!');
-      };
+      });
+
+      buyButton.insertAdjacentElement('afterend', cartButton);
+      card.dataset.cartButtonAdded = 'true';
     });
   }
 
@@ -76,9 +74,8 @@
   window.addEventListener('DOMContentLoaded', () => {
     addCartLink();
     updateCartCount();
-    convertButtons();
-
-    // Existing page clones cards after DOMContentLoaded, so run once more after a short delay.
-    setTimeout(convertButtons, 500);
+    addCartButtons();
+    setTimeout(addCartButtons, 500);
+    setTimeout(addCartButtons, 1000);
   });
 })();
