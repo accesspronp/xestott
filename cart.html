@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cart - Zest OTT</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="cartoon-body">
+<header class="topbar">
+  <a class="brand brand-link" href="index.html"><img src="zest-logo.png" alt="Zest OTT"><div><h2>Zest OTT</h2><p>Your Cart</p></div></a>
+  <nav class="top-nav"><a href="index.html">Home</a><a href="orders.html">My Orders</a><a href="admin.html">Admin</a></nav>
+</header>
+<section class="purchase-layout" style="grid-template-columns:1fr;max-width:980px;">
+<div class="purchase-card">
+<h1>Your Cart</h1>
+<p class="purchase-desc">Review your selected products before checkout.</p>
+<div id="cartItems"></div>
+<div class="order-summary"><div><p>Total Amount</p><h2 id="cartTotal">Rs. 0</h2></div></div>
+<a class="checkout-btn" href="buy.html?cart=1">Proceed to Checkout</a>
+<a class="back-btn" href="index.html">Back to Store</a>
+</div>
+</section>
+<script>
+const cart = JSON.parse(localStorage.getItem('zestCart') || '[]');
+const box = document.getElementById('cartItems');
+const totalBox = document.getElementById('cartTotal');
+function render(){
+  if(!cart.length){box.innerHTML='<div class="status-box"><h2>Cart is empty</h2><p>Add products from the store first.</p></div>'; totalBox.innerText='Rs. 0'; return;}
+  let total=0;
+  box.innerHTML = cart.map((item,i)=>{ total += Number(item.price||0); return `<div class="status-box" style="margin-bottom:12px"><h2>${item.product}</h2><p><b>Duration:</b> ${item.duration}</p><p><b>Price:</b> Rs. ${item.price}</p><button class="back-btn" onclick="removeItem(${i})">Remove</button></div>`; }).join('');
+  totalBox.innerText='Rs. '+total;
+}
+window.removeItem = function(i){ cart.splice(i,1); localStorage.setItem('zestCart', JSON.stringify(cart)); location.reload(); }
+render();
+</script>
+</body>
+</html>
