@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
-export const ADMIN_EMAIL = "kd1183962@gmail.com";
+export const ADMIN_EMAIL = "krishdhami9812766213@gmail.com";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBa-JOyK4DOZeAYTFzccUJB_zzLhaRVkFA",
