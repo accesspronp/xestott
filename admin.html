@@ -1,49 +1,80 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel - Zest OTT</title>
+<link rel="stylesheet" href="style.css">
+</head>
 
-<h1>Admin Panel</h1>
+<body class="cartoon-body">
+
+<h1 style="text-align:center;">Admin Panel</h1>
+
 <div id="orders"></div>
 
 <script type="module">
 import { auth, db, ADMIN_EMAIL } from "./firebase.js";
-import { collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const ordersBox = document.getElementById("orders");
 
 onAuthStateChanged(auth, async (user) => {
 
-  if(!user || user.email !== ADMIN_EMAIL){
+  if (!user || user.email !== ADMIN_EMAIL) {
     alert("Not admin");
     return;
   }
 
-  const snap = await getDocs(collection(db,"orders"));
+  const snap = await getDocs(collection(db, "orders"));
 
   let html = "";
 
-  snap.forEach(d=>{
+  snap.forEach(d => {
     const data = d.data();
 
     html += `
-    <div style="border:1px solid #000;padding:10px;margin:10px;">
+    <div style="border:1px solid #000;padding:15px;margin:15px;background:#fff;">
+      
       <h3>${data.product}</h3>
-      <p>${data.userEmail}</p>
-      <p>Status: ${data.orderStatus}</p>
+
+      <p><b>User:</b> ${data.userEmail}</p>
+      <p><b>Order ID:</b> ${data.orderId || d.id}</p>
+      <p><b>Duration:</b> ${data.duration}</p>
+      <p><b>Amount:</b> Rs. ${data.price}</p>
+
+      <p><b>Account Email:</b> ${data.accountEmail || "-"}</p>
+      <p><b>Password:</b> ${data.accountPassword || "-"}</p>
+
+      <p><b>Status:</b> ${data.orderStatus}</p>
+      <p><b>Payment:</b> ${data.paymentStatus}</p>
 
       <button onclick="update('${d.id}','processing')">Processing</button>
+      <button onclick="update('${d.id}','activated')">Activated</button>
       <button onclick="update('${d.id}','completed')">Completed</button>
+      <button onclick="update('${d.id}','cancelled')">Cancel</button>
+
     </div>
     `;
   });
 
-  document.getElementById("orders").innerHTML = html;
+  ordersBox.innerHTML = html;
 });
 
-window.update = async (id,status)=>{
-  await updateDoc(doc(db,"orders",id),{
+window.update = async (id, status) => {
+  await updateDoc(doc(db, "orders", id), {
     orderStatus: status,
     paymentStatus: "paid"
   });
+
+  alert("Updated!");
   location.reload();
 };
 </script>
