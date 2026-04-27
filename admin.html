@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Admin Panel</h1>
+<div id="orders"></div>
+
+<script type="module">
+import { auth, db, ADMIN_EMAIL } from "./firebase.js";
+import { collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+onAuthStateChanged(auth, async (user) => {
+
+  if(!user || user.email !== ADMIN_EMAIL){
+    alert("Not admin");
+    return;
+  }
+
+  const snap = await getDocs(collection(db,"orders"));
+
+  let html = "";
+
+  snap.forEach(d=>{
+    const data = d.data();
+
+    html += `
+    <div style="border:1px solid #000;padding:10px;margin:10px;">
+      <h3>${data.product}</h3>
+      <p>${data.userEmail}</p>
+      <p>Status: ${data.orderStatus}</p>
+
+      <button onclick="update('${d.id}','processing')">Processing</button>
+      <button onclick="update('${d.id}','completed')">Completed</button>
+    </div>
+    `;
+  });
+
+  document.getElementById("orders").innerHTML = html;
+});
+
+window.update = async (id,status)=>{
+  await updateDoc(doc(db,"orders",id),{
+    orderStatus: status,
+    paymentStatus: "paid"
+  });
+  location.reload();
+};
+</script>
+
+</body>
+</html>
