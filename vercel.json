@@ -1,9 +1,12 @@
 {
   "routes": [
     { "src": "^/$", "dest": "/index.html" },
-    { "src": "^/cart$", "dest": "/cart/index.html" },
-    { "src": "^/orders$", "dest": "/orders/index.html" },
-    { "src": "^/admin$", "dest": "/admin/index.html" },
-    { "src": "^/buy/(.*)", "dest": "/buy/index.html" }
+
+    { "src": "^/buy$", "dest": "/buy.html" },
+    { "src": "^/cart$", "dest": "/cart.html" },
+    { "src": "^/orders$", "dest": "/orders.html" },
+    { "src": "^/admin$", "dest": "/admin.html" },
+
+    { "src": "^/buy/(.*)", "dest": "/buy.html" }
   ]
 }
