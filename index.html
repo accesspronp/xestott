@@ -30,6 +30,9 @@
   <nav class="cartoon-links">
     <a href="#products">Deals</a>
     <a href="#refund">Refunds</a>
+    <a href="cart.html">Cart 🛒</a>
+    <a href="orders.html">My Orders</a>
+    <a href="admin.html">Admin</a>
     <a href="login.html">Login</a>
     <a href="https://wa.me/9779744413521" target="_blank">WhatsApp Support</a>
     <a href="https://shareurl.hamrobazaar.com/cZXaCycPmbZumKLg7" target="_blank">Our Store</a>
@@ -156,12 +159,8 @@ function showCategory(e, id) {
   e.target.classList.add('active-tab');
 }
 function buyNow(product, selectId, formType) {
-  const select = document.getElementById(selectId);
-  const selected = select.options[select.selectedIndex];
-  const duration = selected.textContent.trim();
-  const price = selected.getAttribute("data-price") || "0";
-  const url = "buy.html?product=" + encodeURIComponent(product) + "&duration=" + encodeURIComponent(duration) + "&price=" + encodeURIComponent(price) + "&type=" + encodeURIComponent(formType);
-  window.location.href = url;
+  const slug = product.toLowerCase().replace(/\s+/g,"-").replace(/[^\w-]+/g,"");
+  window.location.href = "buy.html?p=" + slug;
 }
 window.addEventListener("DOMContentLoaded", () => {
   const allGrid = document.getElementById("allGrid");
@@ -192,4 +191,3 @@ window.addEventListener("DOMContentLoaded", () => {
 <script type="module" src="order-preview.js"></script>
 </body>
 </html>
-
