@@ -121,11 +121,9 @@ const slug = params.get("p");
 const isCartCheckout = params.get("cart") === "1";
 const cart = JSON.parse(localStorage.getItem("zestCart") || "[]");
 
-let product = "Selected Product";
-if (slug) {
+let product = params.get("product") || "Selected Product";
+if (!product && slug) {
   product = slug.replace(/-/g," ").replace(/\b\w/g, c=>c.toUpperCase());
-} else {
-  product = params.get("product") || "Selected Product";
 }
 let duration = params.get("duration") || "Selected Duration";
 let price = params.get("price") || "0";
