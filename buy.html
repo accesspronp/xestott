@@ -116,10 +116,17 @@ import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/fir
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const params = new URLSearchParams(window.location.search);
+// CLEAN PARAM SUPPORT
+const slug = params.get("p");
 const isCartCheckout = params.get("cart") === "1";
 const cart = JSON.parse(localStorage.getItem("zestCart") || "[]");
 
-let product = params.get("product") || "Selected Product";
+let product = "Selected Product";
+if (slug) {
+  product = slug.replace(/-/g," ").replace(/\b\w/g, c=>c.toUpperCase());
+} else {
+  product = params.get("product") || "Selected Product";
+}
 let duration = params.get("duration") || "Selected Duration";
 let price = params.get("price") || "0";
 let type = params.get("type") || "normal";
